@@ -9,16 +9,19 @@ permissions:
   contents: read
 
 jobs:
-  test:
-    name: Swift 6.3 on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [macos-latest, ubuntu-latest]
+  macos:
+    name: Swift 6.3 on macOS
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v7
-      - uses: swift-actions/setup-swift@v3
-        with:
-          swift-version: "6.3"
+      - run: swift --version
+      - run: swift test
+
+  linux:
+    name: Swift 6.3 on Linux
+    runs-on: ubuntu-latest
+    container: swift:6.3
+    steps:
+      - uses: actions/checkout@v7
+      - run: swift --version
       - run: swift test
