@@ -3,8 +3,8 @@
 [![CI](https://github.com/jkzh40/swift-graphql/actions/workflows/ci.yml/badge.svg)](https://github.com/jkzh40/swift-graphql/actions/workflows/ci.yml)
 
 A lightweight GraphQL client and query DSL for Swift. It provides typed query
-construction, response-root decoding, a result-builder selection DSL, and macros
-that derive selections from Swift models.
+construction, explicit response-model decoding, a result-builder selection DSL,
+and a macro that derives selections from Swift models.
 
 The package intentionally focuses on request construction and execution. It does
 not perform schema introspection or code generation, and it does not provide a
@@ -41,28 +41,34 @@ available.
 
 ## Usage
 
-Define a response model and use the macros to derive its selectable fields and
-root response type:
+Define a domain model and use `@Fields` to derive its selectable fields:
 
 ```swift
 import GraphQL
 
 @Fields
-@Root("accounts")
 struct Account: Decodable, Sendable {
-    let id: String
+    let id: String?
     let displayName: String
 }
 ```
 
-Build an operation with explicit selections:
+Describe the operation's response shape separately from the reusable model, then
+build the operation with explicit selections:
 
 ```swift
-@RootOperation(rootType: "Account.Root")
+struct GetAccountsResponse: ResponseModel {
+    let accounts: [Account]
+}
+
 struct GetAccountsOperation: QueryOperation {
+    typealias Response = GetAccountsResponse
+
+    let variables = EmptyVariables()
+
     @SelectionBuilder
     var body: [Selection] {
-        field(Account.Root.self) {
+        field("accounts") {
             Account.Fields.id
             Account.Fields.displayName
         }
@@ -90,7 +96,7 @@ let configuration = DefaultAPIConfiguration(
     headers: ["Authorization": "Bearer token"]
 )
 let client = Client<ExampleAPI>(configuration: configuration)
-let accounts = try await client.execute(GetAccountsOperation()).value
+let accounts = try await client.execute(GetAccountsOperation()).accounts
 ```
 
 For operations with variables, provide the GraphQL declaration and use variable
@@ -101,14 +107,19 @@ struct AccountVariables: Encodable, Sendable {
     let id: String
 }
 
-@RootOperation(rootType: "Account.Root")
+struct GetAccountResponse: ResponseModel {
+    let account: Account?
+}
+
 struct GetAccountOperation: QueryOperation {
+    typealias Response = GetAccountResponse
+
     let variables: AccountVariables
     let variablesDeclaration: String? = "$id: ID!"
 
     @SelectionBuilder
     var body: [Selection] {
-        field(Account.Root.self, arguments: [.variable("id")]) {
+        field("account", arguments: [.variable("id")]) {
             Account.Fields.id
             Account.Fields.displayName
         }
@@ -116,8 +127,9 @@ struct GetAccountOperation: QueryOperation {
 }
 ```
 
-`@Root` assumes the field returns an array. For a single value, use
-`@Root("viewer", valueType: "Self")`.
+Response models mirror the fields immediately inside GraphQL's `data` envelope.
+They can represent lists, single values, aliases, multiple top-level fields, or
+connection objects without coupling those shapes to domain models.
 
 ## Testing
 

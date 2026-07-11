@@ -3,23 +3,32 @@ import GraphQL
 import Testing
 
 @Fields
-@Root("accounts")
 private struct Account: Decodable, Equatable, Sendable {
     let id: String
     let displayName: String
 }
 
 @Fields
-@Root("viewer", valueType: "Self")
 private struct Viewer: Decodable, Equatable, Sendable {
     let id: String
 }
 
-@RootOperation(rootType: "Account.Root")
+private struct AccountsResponse: ResponseModel, Equatable {
+    let accounts: [Account]
+}
+
+private struct ViewerResponse: ResponseModel, Equatable {
+    let viewer: Viewer
+}
+
 private struct AccountsOperation: QueryOperation {
+    typealias Response = AccountsResponse
+
+    let variables = EmptyVariables()
+
     @SelectionBuilder
     var body: [Selection] {
-        field(Account.Root.self) {
+        field("accounts") {
             Account.Fields.id
             Account.Fields.displayName
         }
@@ -33,23 +42,23 @@ func fieldsMacroGeneratesTypedSelections() {
 }
 
 @Test
-func rootMacroDefaultsToAnArrayResponse() throws {
+func explicitResponseModelDecodesAnArrayField() throws {
     let data = Data(#"{"accounts":[{"id":"account-1","display_name":"Primary"}]}"#.utf8)
-    let response = try Client<ModelTestAPI>.makeDecoder().decode(RootResponse<Account.Root>.self, from: data)
+    let response = try Client<ModelTestAPI>.makeDecoder().decode(AccountsResponse.self, from: data)
 
-    #expect(response.value == [Account(id: "account-1", displayName: "Primary")])
+    #expect(response.accounts == [Account(id: "account-1", displayName: "Primary")])
 }
 
 @Test
-func rootMacroSupportsSingleValueResponses() throws {
+func explicitResponseModelDecodesASingleValueField() throws {
     let data = Data(#"{"viewer":{"id":"user-1"}}"#.utf8)
-    let response = try Client<ModelTestAPI>.makeDecoder().decode(RootResponse<Viewer.Root>.self, from: data)
+    let response = try Client<ModelTestAPI>.makeDecoder().decode(ViewerResponse.self, from: data)
 
-    #expect(response.value == Viewer(id: "user-1"))
+    #expect(response.viewer == Viewer(id: "user-1"))
 }
 
 @Test
-func rootOperationMacroSynthesizesResponseAndEmptyVariables() throws {
+func operationDeclaresItsResponseAndEmptyVariables() throws {
     let operation = AccountsOperation()
     let variables = try Client<ModelTestAPI>.makeEncoder().encode(operation.variables)
 

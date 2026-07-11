@@ -1,26 +1,28 @@
 import GraphQL
 import Testing
 
-private enum AccountsRoot: ResponseRoot {
-    typealias Value = [TestAccount]
-
-    static let fieldName = "accounts"
-}
-
 @Fields
 private struct TestAccount: Decodable, Sendable {
     let id: String
     let displayName: String
 }
 
+private struct AccountsResponse: ResponseModel {
+    let accounts: [TestAccount]
+}
+
+private struct RenameAccountResponse: ResponseModel {
+    let account: [TestAccount]
+}
+
 private struct GetAccountsOperation: QueryOperation {
-    typealias Response = RootResponse<AccountsRoot>
+    typealias Response = AccountsResponse
 
     let variables = EmptyVariables()
 
     @SelectionBuilder
     var body: [Selection] {
-        field(AccountsRoot.self) {
+        field("accounts") {
             TestAccount.Fields.id
             TestAccount.Fields.displayName
         }
@@ -33,7 +35,7 @@ private struct RenameAccountOperation: QueryOperation {
         let name: String
     }
 
-    typealias Response = RootResponse<AccountsRoot>
+    typealias Response = RenameAccountResponse
 
     let variables = Variables(id: "account-1", name: "Checking")
     let operationKind = OperationKind.mutation
@@ -42,7 +44,7 @@ private struct RenameAccountOperation: QueryOperation {
     @SelectionBuilder
     var body: [Selection] {
         field(
-            AccountsRoot.self,
+            "accounts",
             alias: "account",
             arguments: [
                 .variable("id"),

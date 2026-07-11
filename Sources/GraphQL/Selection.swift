@@ -135,12 +135,3 @@ public func field(
 ) -> Selection {
     Selection(name: name, alias: alias, arguments: arguments, selections: selections())
 }
-
-public func field<Root: ResponseRoot>(
-    _ root: Root.Type,
-    alias: String? = nil,
-    arguments: [Argument] = [],
-    @SelectionBuilder selections: () -> [Selection] = { [] }
-) -> Selection {
-    Selection(name: Root.fieldName, alias: alias, arguments: arguments, selections: selections())
-}

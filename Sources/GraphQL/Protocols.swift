@@ -23,12 +23,14 @@ public protocol Service: Sendable {
 
 public protocol Operation: Sendable {
     associatedtype Variables: Encodable & Sendable
+    /// The fields nested immediately inside the GraphQL `data` envelope.
     associatedtype Response: ResponseModel
 
     var query: Query { get }
     var variables: Variables { get }
 }
 
+/// A decodable response shape matching the fields selected by an operation.
 public protocol ResponseModel: Decodable, Sendable {}
 
 extension Array: ResponseModel where Element: ResponseModel {}
