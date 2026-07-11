@@ -1,4 +1,4 @@
-public struct Query: Sendable {
+public struct Query: Equatable, Sendable {
     public let operationName: String
     public let source: String
 

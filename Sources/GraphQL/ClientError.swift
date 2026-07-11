@@ -1,6 +1,6 @@
 import Foundation
 
-public enum ClientError: Error, CustomStringConvertible {
+public enum ClientError: Error, LocalizedError, CustomStringConvertible, Sendable {
     case invalidResponse
     case requestFailed(statusCode: Int, body: String?)
     case responseErrors([ResponseError])
@@ -22,4 +22,6 @@ public enum ClientError: Error, CustomStringConvertible {
             "The response did not include data"
         }
     }
+
+    public var errorDescription: String? { description }
 }

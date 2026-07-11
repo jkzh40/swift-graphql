@@ -41,7 +41,7 @@ public protocol SelectionConvertible: Sendable {
     var selection: Selection { get }
 }
 
-public struct Selection: Sendable {
+public struct Selection: Equatable, Sendable {
     public let name: String
     public let alias: String?
     public let arguments: [Argument]
@@ -110,7 +110,7 @@ public struct ModelField<Root: Sendable, Value: Sendable>: SelectionConvertible,
     }
 }
 
-public struct Argument: Sendable {
+public struct Argument: Equatable, Sendable {
     public let name: String
     public let value: String
 

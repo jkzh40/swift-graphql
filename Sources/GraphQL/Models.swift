@@ -52,6 +52,13 @@ private struct DynamicCodingKey: CodingKey {
     }
 }
 
-public struct ResponseError: Decodable, Error, Sendable {
+public struct ResponseError: Decodable, Error, LocalizedError, CustomStringConvertible, Equatable, Sendable {
     public let message: String
+
+    public init(message: String) {
+        self.message = message
+    }
+
+    public var description: String { message }
+    public var errorDescription: String? { message }
 }
